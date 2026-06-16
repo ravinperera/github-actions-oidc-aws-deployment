@@ -1,0 +1,64 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    paths:
+      - "aws/**"
+      - ".github/workflows/terraform-plan.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+        default: dev
+      aws_region:
+        description: AWS region
+        required: true
+        default: eu-west-2
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: read
+
+jobs:
+  plan:
+    name: Terraform plan
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
+
+    env:
+      AWS_REGION: ${{ inputs.aws_region || 'eu-west-2' }}
+      TF_WORKSPACE: ${{ inputs.environment || 'dev' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::111122223333:role/example-${{ env.TF_WORKSPACE }}-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: Terraform format check
+        working-directory: aws/iam
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        working-directory: aws/iam
+        run: terraform init -backend=false
+
+      - name: Terraform validate
+        working-directory: aws/iam
+        run: terraform validate
