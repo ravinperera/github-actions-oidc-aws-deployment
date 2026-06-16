@@ -1,0 +1,63 @@
+name: Deploy With AWS OIDC
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+        default: dev
+      aws_region:
+        description: AWS region
+        required: true
+        default: eu-west-2
+      image_tag:
+        description: Immutable image tag to deploy
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_ACCOUNT_ID: 111122223333
+  SERVICE_NAME: example-api
+  ECS_CLUSTER_NAME: example-cluster
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/example-${{ inputs.environment }}-github-actions-role
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Confirm caller identity
+        run: aws sts get-caller-identity
+
+      - name: Render deployment summary
+        run: |
+          echo "Deploying ${SERVICE_NAME}"
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Region: ${{ inputs.aws_region }}"
+          echo "Image tag: ${{ inputs.image_tag }}"
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster "$ECS_CLUSTER_NAME" \
+            --service "$SERVICE_NAME" \
+            --force-new-deployment
