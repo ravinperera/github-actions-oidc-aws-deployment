@@ -31,7 +31,8 @@ Long-lived AWS access keys in CI/CD systems create unnecessary risk. OIDC allows
 ├── docs/
 │   ├── trust-policy.md
 │   ├── workflow-design.md
-│   └── security-notes.md
+│   ├── security-notes.md
+│   └── troubleshooting.md
 └── README.md
 ```
 
@@ -71,6 +72,13 @@ Terraform / ECS / S3 / Lambda / deployment action
 - Minimal IAM permissions per deployment job
 - GitHub Actions permissions explicitly scoped with `id-token: write` and `contents: read`
 - Production deployments should use GitHub environments and required reviewers
+
+## Documentation
+
+- [Trust policy guidance](docs/trust-policy.md)
+- [Workflow design](docs/workflow-design.md)
+- [Security notes](docs/security-notes.md)
+- [Troubleshooting guide](docs/troubleshooting.md)
 
 ## Status
 
