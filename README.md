@@ -33,7 +33,8 @@ Long-lived AWS access keys in CI/CD systems create unnecessary risk. OIDC allows
 │   ├── workflow-design.md
 │   ├── security-notes.md
 │   ├── troubleshooting.md
-│   └── environment-protection.md
+│   ├── environment-protection.md
+│   └── least-privilege-iam.md
 ├── CONTRIBUTING.md
 └── README.md
 ```
@@ -82,6 +83,7 @@ Terraform / ECS / S3 / Lambda / deployment action
 - [Security notes](docs/security-notes.md)
 - [Troubleshooting guide](docs/troubleshooting.md)
 - [Environment protection guide](docs/environment-protection.md)
+- [Least-privilege IAM guide](docs/least-privilege-iam.md)
 - [Contributing guide](CONTRIBUTING.md)
 
 ## Status
