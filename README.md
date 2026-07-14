@@ -30,6 +30,7 @@ Long-lived AWS access keys in CI/CD systems create unnecessary risk. OIDC allows
 │   └── deployment-policy.json
 ├── docs/
 │   ├── trust-policy.md
+│   ├── condition-review-checklist.md
 │   ├── workflow-design.md
 │   ├── security-notes.md
 │   ├── troubleshooting.md
@@ -80,6 +81,7 @@ Terraform / ECS / S3 / Lambda / deployment action
 ## Documentation
 
 - [Trust policy guidance](docs/trust-policy.md)
+- [OIDC condition review checklist](docs/condition-review-checklist.md)
 - [Workflow design](docs/workflow-design.md)
 - [Security notes](docs/security-notes.md)
 - [Troubleshooting guide](docs/troubleshooting.md)
