@@ -4,6 +4,76 @@ Secure GitHub Actions to AWS deployment pattern using OIDC, IAM roles, and multi
 
 This repository demonstrates how to deploy to AWS from GitHub Actions without storing long-lived AWS access keys in GitHub secrets. It uses GitHub's OIDC identity token to assume environment-specific AWS IAM roles at runtime.
 
+## Five-Minute Quick Start
+
+Use this as a setup order, not as production-ready copy and paste. Review every trust condition and deployment permission for your own repository and AWS account.
+
+### 1. Choose the deployment identity boundaries
+
+Replace these placeholders before provisioning anything:
+
+| Placeholder | Purpose | Example |
+| --- | --- | --- |
+| `<github-organisation>` | GitHub owner allowed to request credentials | `example-org` |
+| `<repository>` | Repository allowed to assume the AWS role | `example-service` |
+| `<branch>` | Branch allowed by the trust policy | `main` |
+| `<environment>` | Protected GitHub environment | `prod` |
+| `<aws-account-id>` | Target AWS account | `111122223333` |
+| `<aws-region>` | Target AWS region | `eu-west-2` |
+
+Keep the repository, branch, and environment conditions as narrow as the deployment process allows. Do not use wildcards simply to make the first test pass.
+
+### 2. Provision or reuse the GitHub OIDC provider in AWS
+
+The AWS account needs an IAM OIDC provider for `https://token.actions.githubusercontent.com` with the audience `sts.amazonaws.com`. An account normally needs this provider only once.
+
+Review [`aws/iam/github-oidc-provider.tf`](aws/iam/github-oidc-provider.tf), confirm the current AWS and GitHub OIDC guidance, and either provision the provider or supply the ARN of an existing approved provider.
+
+### 3. Create an environment-scoped deployment role
+
+Configure [`aws/iam/github-oidc-role.tf`](aws/iam/github-oidc-role.tf) with:
+
+```hcl
+github_owner       = "<github-organisation>"
+github_repository  = "<repository>"
+allowed_branch      = "<branch>"
+github_environment  = "<environment>"
+environment         = "<environment>"
+```
+
+The role trust policy should validate both:
+
+- `aud` equals `sts.amazonaws.com`;
+- `sub` matches the intended repository plus branch or GitHub environment.
+
+Then review `deployment-policy.json` and remove permissions that the deployment does not need. See the [trust-policy guide](docs/trust-policy.md) for the claim patterns and review checks.
+
+### 4. Configure the GitHub environment and workflow permissions
+
+Create the matching GitHub environment, such as `dev`, `staging`, or `prod`. Add required reviewers for production before allowing the job to request AWS credentials.
+
+The workflow needs only:
+
+```yaml
+permissions:
+  id-token: write
+  contents: read
+```
+
+`id-token: write` allows the job to request an OIDC token; it does not itself grant AWS access. AWS grants temporary credentials only after the IAM trust policy accepts the token claims.
+
+### 5. Replace workflow placeholders and run a controlled test
+
+In [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), replace `<aws-account-id>` and the example service, cluster, and role names. Keep the role ARN aligned with the environment selected by the workflow.
+
+Run the workflow first against a non-production environment with an immutable image tag. Confirm the caller identity step reports the expected account and role before enabling a real deployment action.
+
+For the full separation of plan, deployment, and environment controls, see the [workflow-design guide](docs/workflow-design.md).
+
+### Why temporary credentials are preferred
+
+GitHub OIDC credentials are issued only for the workflow run, expire automatically, and are constrained by the IAM role's trust and permission policies. This avoids storing reusable AWS access keys in GitHub secrets and reduces the impact of accidental disclosure. Temporary credentials still require least-privilege roles, protected environments, and careful claim conditions.
+
 ## What This Demonstrates
 
 - GitHub Actions OIDC authentication to AWS
