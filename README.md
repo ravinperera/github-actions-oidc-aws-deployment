@@ -46,7 +46,7 @@ The role trust policy should validate both:
 - `aud` equals `sts.amazonaws.com`;
 - `sub` matches the intended repository plus branch or GitHub environment.
 
-Then review `deployment-policy.json` and remove permissions that the deployment does not need. See the [trust-policy guide](docs/trust-policy.md) for the claim patterns and review checks.
+Then review `deployment-policy.json` and remove permissions that the deployment does not need. Use the [identity condition review checklist](docs/condition-review-checklist.md) to verify the repository, branch, tag, environment, audience, and optional defence-in-depth claims. See the [trust-policy guide](docs/trust-policy.md) for the claim patterns and review checks.
 
 ### 4. Configure the GitHub environment and workflow permissions
 
@@ -99,6 +99,7 @@ Long-lived AWS access keys in CI/CD systems create unnecessary risk. OIDC allows
 │   ├── github-oidc-role.tf
 │   └── deployment-policy.json
 ├── docs/
+│   ├── condition-review-checklist.md
 │   ├── deployment-audit-evidence.md
 │   ├── trust-policy.md
 │   ├── workflow-design.md
@@ -152,6 +153,7 @@ Terraform / ECS / S3 / Lambda / deployment action
 
 ## Documentation
 
+- [OIDC identity condition review checklist](docs/condition-review-checklist.md)
 - [Deployment audit evidence guide](docs/deployment-audit-evidence.md)
 - [Trust policy guidance](docs/trust-policy.md)
 - [Workflow design](docs/workflow-design.md)
