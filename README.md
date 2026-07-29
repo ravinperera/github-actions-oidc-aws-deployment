@@ -66,7 +66,7 @@ permissions:
 
 In [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), replace `<aws-account-id>` and the example service, cluster, and role names. Keep the role ARN aligned with the environment selected by the workflow.
 
-Run the workflow first against a non-production environment with an immutable image tag. Confirm the caller identity step reports the expected account and role before enabling a real deployment action.
+Run the workflow first against a non-production environment with an immutable image tag. Confirm the caller identity step reports the expected account and role before enabling a real deployment action. Keep the previous known-good image or release available and review the [deployment incident and rollback guide](docs/rollback-guide.md) before enabling production deployment.
 
 For the full separation of plan, deployment, and environment controls, see the [workflow-design guide](docs/workflow-design.md).
 
@@ -101,6 +101,7 @@ Long-lived AWS access keys in CI/CD systems create unnecessary risk. OIDC allows
 ├── docs/
 │   ├── condition-review-checklist.md
 │   ├── deployment-audit-evidence.md
+│   ├── rollback-guide.md
 │   ├── trust-policy.md
 │   ├── workflow-design.md
 │   ├── security-notes.md
@@ -155,6 +156,7 @@ Terraform / ECS / S3 / Lambda / deployment action
 
 - [OIDC identity condition review checklist](docs/condition-review-checklist.md)
 - [Deployment audit evidence guide](docs/deployment-audit-evidence.md)
+- [Deployment incident and rollback guide](docs/rollback-guide.md)
 - [Trust policy guidance](docs/trust-policy.md)
 - [Workflow design](docs/workflow-design.md)
 - [Security notes](docs/security-notes.md)
