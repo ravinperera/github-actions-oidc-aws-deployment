@@ -1,0 +1,44 @@
+name: Validate Examples
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TF_IN_AUTOMATION: true
+
+jobs:
+  validate:
+    name: Credential-free validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run repository checks
+        run: python3 scripts/validate_examples.py
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive aws
+
+      - name: Initialise Terraform without a backend
+        run: terraform -chdir=aws/iam init -backend=false -input=false
+
+      - name: Validate Terraform configuration
+        run: terraform -chdir=aws/iam validate
