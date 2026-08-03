@@ -93,7 +93,8 @@ Long-lived AWS access keys in CI/CD systems create unnecessary risk. OIDC allows
 .
 ├── .github/workflows/
 │   ├── deploy.yml
-│   └── terraform-plan.yml
+│   ├── terraform-plan.yml
+│   └── validate.yml
 ├── aws/iam/
 │   ├── github-oidc-provider.tf
 │   ├── github-oidc-role.tf
@@ -111,6 +112,8 @@ Long-lived AWS access keys in CI/CD systems create unnecessary risk. OIDC allows
 │   ├── reusable-workflows.md
 │   ├── session-and-claim-hardening.md
 │   └── validation-checklist.md
+├── scripts/
+│   └── validate_examples.py
 ├── CONTRIBUTING.md
 └── README.md
 ```
@@ -167,6 +170,21 @@ Terraform / ECS / S3 / Lambda / deployment action
 - [OIDC session and claim hardening](docs/session-and-claim-hardening.md)
 - [OIDC deployment validation checklist](docs/validation-checklist.md)
 - [Contributing guide](CONTRIBUTING.md)
+
+## Validate Locally
+
+The validation path is credential-free and does not call AWS. Terraform 1.6 or later is required.
+
+```bash
+python3 scripts/validate_examples.py
+terraform fmt -check -recursive aws
+terraform -chdir=aws/iam init -backend=false -input=false
+terraform -chdir=aws/iam validate
+```
+
+The script validates JSON syntax, local Markdown links, workflow indentation, and checks workflow files for static AWS credential markers. GitHub Actions runs the same checks in [`.github/workflows/validate.yml`](.github/workflows/validate.yml) with read-only repository permission.
+
+The examples intentionally contain placeholder account IDs, resource names, roles, regions, and ARNs. Validation confirms structure and Terraform syntax; it does not prove that the examples are deployable in a particular AWS account, that IAM permissions are least privilege for a real workload, or that current provider guidance has been independently reviewed. The separate Terraform plan workflow requires an approved AWS role and environment configuration and is not part of the credential-free validation path.
 
 ## Status
 
