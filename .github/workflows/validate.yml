@@ -26,6 +26,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Run validator regression tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+
       - name: Run repository checks
         run: python3 scripts/validate_examples.py
 
