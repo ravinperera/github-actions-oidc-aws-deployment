@@ -1,0 +1,47 @@
+name: Documentation or example improvement
+description: Suggest a focused improvement to the public OIDC guidance or reference examples.
+title: "[Docs]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the reference material. Do not include AWS credentials, account identifiers, private endpoints, customer data, or internal logs.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - README or getting started
+        - OIDC trust-policy guidance
+        - IAM least-privilege guidance
+        - Terraform example
+        - GitHub Actions example
+        - Troubleshooting or rollback guidance
+        - Other documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is unclear or missing?
+      description: Describe the documentation gap or example that could be safer or easier to use.
+    validations:
+      required: true
+
+  - type: textarea
+    id: improvement
+    attributes:
+      label: Suggested improvement
+      description: Keep the proposed change narrow and use placeholders instead of real cloud identifiers.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I have not included credentials, private AWS details, customer data, or internal logs.
+          required: true

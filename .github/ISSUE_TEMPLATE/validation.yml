@@ -1,0 +1,47 @@
+name: Validation or example problem
+description: Report a reproducible problem with repository validation or a credential-free reference example.
+title: "[Validation]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please share only sanitized, public-safe details. Security vulnerabilities should follow SECURITY.md rather than being posted in a public issue.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Repository validator
+        - Validator unit tests
+        - Terraform reference configuration
+        - GitHub Actions workflow example
+        - IAM policy or trust-policy example
+        - Markdown or local links
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide the smallest credential-free example or command sequence that demonstrates the problem.
+      placeholder: "Command, sanitized input, and observed result"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What should the repository example or validator do instead?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I removed credentials, tokens, private endpoints, AWS account identifiers, customer data, and internal logs.
+          required: true
