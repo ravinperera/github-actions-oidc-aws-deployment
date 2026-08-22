@@ -53,25 +53,49 @@ def validate_markdown_links(errors: list[str]) -> int:
             continue
         checked += 1
         text = path.read_text(encoding="utf-8")
-        for raw_target in MARKDOWN_LINK.findall(text):
-            target = raw_target.strip().split(maxsplit=1)[0].strip("<>")
-            if not target or target.startswith("#") or target.startswith(REMOTE_PREFIXES):
+        active_fence: str | None = None
+
+        for line in text.splitlines():
+            stripped = line.lstrip()
+            marker = None
+            if stripped.startswith("```"):
+                marker = "```"
+            elif stripped.startswith("~~~"):
+                marker = "~~~"
+
+            if marker is not None:
+                if active_fence is None:
+                    active_fence = marker
+                elif active_fence == marker:
+                    active_fence = None
                 continue
-            target = unquote(target.split("#", 1)[0].split("?", 1)[0])
-            if not target:
+
+            if active_fence is not None:
                 continue
-            resolved = (path.parent / target).resolve()
-            try:
-                resolved.relative_to(ROOT)
-            except ValueError:
-                errors.append(
-                    f"{path.relative_to(ROOT)}: link escapes repository: {raw_target}"
-                )
-                continue
-            if not resolved.exists():
-                errors.append(
-                    f"{path.relative_to(ROOT)}: missing local link target: {raw_target}"
-                )
+
+            for raw_target in MARKDOWN_LINK.findall(line):
+                target = raw_target.strip().split(maxsplit=1)[0].strip("<>")
+                if (
+                    not target
+                    or target.startswith("#")
+                    or target.startswith(REMOTE_PREFIXES)
+                ):
+                    continue
+                target = unquote(target.split("#", 1)[0].split("?", 1)[0])
+                if not target:
+                    continue
+                resolved = (path.parent / target).resolve()
+                try:
+                    resolved.relative_to(ROOT)
+                except ValueError:
+                    errors.append(
+                        f"{path.relative_to(ROOT)}: link escapes repository: {raw_target}"
+                    )
+                    continue
+                if not resolved.exists():
+                    errors.append(
+                        f"{path.relative_to(ROOT)}: missing local link target: {raw_target}"
+                    )
     return checked
 
 
