@@ -72,6 +72,26 @@ class ValidateExamplesTests(unittest.TestCase):
         self.assertTrue(any("missing local link target" in error for error in errors))
         self.assertTrue(any("link escapes repository" in error for error in errors))
 
+    def test_markdown_links_ignore_fenced_code_examples(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "guide.md").write_text(
+                "```markdown\n"
+                "[example](missing-backtick.md)\n"
+                "```\n"
+                "~~~markdown\n"
+                "[example](missing-tilde.md)\n"
+                "~~~\n"
+                "[real](missing-real.md)\n",
+                encoding="utf-8",
+            )
+
+            checked, errors = self.run_with_root(root, validator.validate_markdown_links)
+
+        self.assertEqual(checked, 1)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("missing-real.md", errors[0])
+
     def test_workflow_validation_rejects_static_credential_markers(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
