@@ -25,6 +25,33 @@ class ValidateExamplesTests(unittest.TestCase):
         finally:
             validator.ROOT = original_root
 
+    def test_json_validation_rejects_duplicate_object_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "policy.json").write_text(
+                '{"Version": "2012-10-17", "Version": "2008-10-17"}\n',
+                encoding="utf-8",
+            )
+
+            checked, errors = self.run_with_root(root, validator.validate_json)
+
+        self.assertEqual(checked, 1)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("duplicate JSON object key", errors[0])
+
+    def test_json_validation_accepts_unique_object_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "policy.json").write_text(
+                '{"Version": "2012-10-17", "Statement": []}\n',
+                encoding="utf-8",
+            )
+
+            checked, errors = self.run_with_root(root, validator.validate_json)
+
+        self.assertEqual(checked, 1)
+        self.assertEqual(errors, [])
+
     def test_markdown_links_accept_local_targets_and_reject_bad_paths(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
