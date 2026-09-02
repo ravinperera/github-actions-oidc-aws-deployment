@@ -68,7 +68,7 @@ In [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), replace `<aws
 
 Run the workflow first against a non-production environment with an immutable image tag. Confirm the caller identity step reports the expected account and role before enabling a real deployment action. Keep the previous known-good image or release available and review the [deployment incident and rollback guide](docs/rollback-guide.md) before enabling production deployment.
 
-For the full separation of plan, deployment, and environment controls, see the [workflow-design guide](docs/workflow-design.md).
+For the full separation of plan, deployment, environment, and per-environment concurrency controls, see the [workflow-design guide](docs/workflow-design.md).
 
 ### Why temporary credentials are preferred
 
@@ -155,6 +155,7 @@ Terraform / ECS / S3 / Lambda / deployment action
 - Minimal IAM permissions per deployment job
 - GitHub Actions permissions explicitly scoped with `id-token: write` and `contents: read`
 - Production deployments should use GitHub environments and required reviewers
+- Deployments targeting the same environment should use an explicit concurrency and cancellation policy
 - Third-party actions should be reviewed as executable dependencies, with immutable references preferred for high-assurance workflows
 
 ## Documentation
