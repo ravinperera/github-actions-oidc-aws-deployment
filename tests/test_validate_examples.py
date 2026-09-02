@@ -99,6 +99,8 @@ class ValidateExamplesTests(unittest.TestCase):
             workflow_dir.mkdir(parents=True)
             (workflow_dir / "unsafe.yml").write_text(
                 "name: Unsafe example\n"
+                "permissions:\n"
+                "  contents: read\n"
                 "jobs:\n"
                 "  test:\n"
                 "    env:\n"
@@ -113,6 +115,42 @@ class ValidateExamplesTests(unittest.TestCase):
         self.assertEqual(len(errors), 2)
         self.assertTrue(any("AWS_ACCESS_KEY_ID" in error for error in errors))
         self.assertTrue(any("AWS_SECRET_ACCESS_KEY" in error for error in errors))
+
+    def test_workflow_validation_rejects_missing_explicit_permissions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workflow_dir = root / ".github" / "workflows"
+            workflow_dir.mkdir(parents=True)
+            (workflow_dir / "missing.yml").write_text(
+                "name: Missing permissions\n"
+                "jobs:\n"
+                "  test:\n"
+                "    runs-on: ubuntu-latest\n",
+                encoding="utf-8",
+            )
+
+            checked, errors = self.run_with_root(root, validator.validate_workflows)
+
+        self.assertEqual(checked, 1)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("missing an explicit top-level permissions declaration", errors[0])
+
+    def test_workflow_validation_rejects_write_all(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workflow_dir = root / ".github" / "workflows"
+            workflow_dir.mkdir(parents=True)
+            (workflow_dir / "unsafe.yml").write_text(
+                "name: Broad permissions\n"
+                "permissions: write-all\n",
+                encoding="utf-8",
+            )
+
+            checked, errors = self.run_with_root(root, validator.validate_workflows)
+
+        self.assertEqual(checked, 1)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("broad permissions: write-all", errors[0])
 
     def test_workflow_validation_accepts_oidc_only_workflow(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
