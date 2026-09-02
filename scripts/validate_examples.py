@@ -18,6 +18,8 @@ STATIC_CREDENTIAL_MARKERS = (
     "AWS_ACCESS_KEY_ID",
     "AWS_SECRET_ACCESS_KEY",
 )
+TOP_LEVEL_PERMISSIONS = re.compile(r"(?m)^permissions\s*:")
+WRITE_ALL_PERMISSIONS = re.compile(r"(?mi)^\s*permissions\s*:\s*write-all\s*(?:#.*)?$")
 
 
 def reject_duplicate_json_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -109,12 +111,25 @@ def validate_workflows(errors: list[str]) -> int:
     for path in sorted((*workflow_dir.glob("*.yml"), *workflow_dir.glob("*.yaml"))):
         checked += 1
         text = path.read_text(encoding="utf-8")
+        relative_path = path.relative_to(ROOT)
+
         if "\t" in text:
-            errors.append(f"{path.relative_to(ROOT)}: YAML contains tab indentation")
+            errors.append(f"{relative_path}: YAML contains tab indentation")
+
+        if not TOP_LEVEL_PERMISSIONS.search(text):
+            errors.append(
+                f"{relative_path}: workflow is missing an explicit top-level permissions declaration"
+            )
+
+        if WRITE_ALL_PERMISSIONS.search(text):
+            errors.append(
+                f"{relative_path}: workflow uses broad permissions: write-all"
+            )
+
         for marker in STATIC_CREDENTIAL_MARKERS:
             if marker in text:
                 errors.append(
-                    f"{path.relative_to(ROOT)}: static AWS credential marker found: {marker}"
+                    f"{relative_path}: static AWS credential marker found: {marker}"
                 )
     return checked
 
