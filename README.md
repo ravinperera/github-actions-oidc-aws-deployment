@@ -72,7 +72,7 @@ For the full separation of plan, deployment, and environment controls, see the [
 
 ### Why temporary credentials are preferred
 
-GitHub OIDC credentials are issued only for the workflow run, expire automatically, and are constrained by the IAM role's trust and permission policies. This avoids storing reusable AWS access keys in GitHub secrets and reduces the impact of accidental disclosure. Temporary credentials still require least-privilege roles, protected environments, and careful claim conditions.
+GitHub OIDC credentials are issued only for the workflow run, expire automatically, and are constrained by the IAM role's trust and permission policies. This avoids storing reusable AWS access keys in GitHub secrets and reduces the impact of accidental disclosure. Temporary credentials still require least-privilege roles, protected environments, careful claim conditions, and trusted workflow dependencies.
 
 ## What This Demonstrates
 
@@ -100,6 +100,7 @@ Long-lived AWS access keys in CI/CD systems create unnecessary risk. OIDC allows
 │   ├── github-oidc-role.tf
 │   └── deployment-policy.json
 ├── docs/
+│   ├── action-supply-chain.md
 │   ├── condition-review-checklist.md
 │   ├── deployment-audit-evidence.md
 │   ├── rollback-guide.md
@@ -154,9 +155,11 @@ Terraform / ECS / S3 / Lambda / deployment action
 - Minimal IAM permissions per deployment job
 - GitHub Actions permissions explicitly scoped with `id-token: write` and `contents: read`
 - Production deployments should use GitHub environments and required reviewers
+- Third-party actions should be reviewed as executable dependencies, with immutable references preferred for high-assurance workflows
 
 ## Documentation
 
+- [GitHub Actions supply-chain hardening](docs/action-supply-chain.md)
 - [OIDC identity condition review checklist](docs/condition-review-checklist.md)
 - [Deployment audit evidence guide](docs/deployment-audit-evidence.md)
 - [Deployment incident and rollback guide](docs/rollback-guide.md)
@@ -182,7 +185,7 @@ terraform -chdir=aws/iam init -backend=false -input=false
 terraform -chdir=aws/iam validate
 ```
 
-The script validates JSON syntax, local Markdown links, workflow indentation, and checks workflow files for static AWS credential markers. GitHub Actions runs the same checks in [`.github/workflows/validate.yml`](.github/workflows/validate.yml) with read-only repository permission.
+The script validates JSON syntax, local Markdown links, workflow indentation, explicit workflow permissions, rejection of `permissions: write-all`, and checks workflow files for static AWS credential markers. GitHub Actions runs the same checks in [`.github/workflows/validate.yml`](.github/workflows/validate.yml) with read-only repository permission.
 
 The examples intentionally contain placeholder account IDs, resource names, roles, regions, and ARNs. Validation confirms structure and Terraform syntax; it does not prove that the examples are deployable in a particular AWS account, that IAM permissions are least privilege for a real workload, or that current provider guidance has been independently reviewed. The separate Terraform plan workflow requires an approved AWS role and environment configuration and is not part of the credential-free validation path.
 
