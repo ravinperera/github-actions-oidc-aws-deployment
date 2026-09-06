@@ -20,6 +20,12 @@ STATIC_CREDENTIAL_MARKERS = (
 )
 TOP_LEVEL_PERMISSIONS = re.compile(r"(?m)^permissions\s*:")
 WRITE_ALL_PERMISSIONS = re.compile(r"(?mi)^\s*permissions\s*:\s*write-all\s*(?:#.*)?$")
+ID_TOKEN_WRITE = re.compile(r"(?mi)^\s*id-token\s*:\s*write\s*(?:#.*)?$")
+CONFIGURE_AWS_CREDENTIALS = re.compile(
+    r"(?mi)^\s*(?:-\s*)?uses\s*:\s*aws-actions/configure-aws-credentials@"
+)
+ROLE_TO_ASSUME = re.compile(r"(?mi)^\s*role-to-assume\s*:")
+AWS_REGION_INPUT = re.compile(r"(?mi)^\s*aws-region\s*:")
 
 
 def reject_duplicate_json_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -125,6 +131,20 @@ def validate_workflows(errors: list[str]) -> int:
             errors.append(
                 f"{relative_path}: workflow uses broad permissions: write-all"
             )
+
+        if CONFIGURE_AWS_CREDENTIALS.search(text):
+            if not ID_TOKEN_WRITE.search(text):
+                errors.append(
+                    f"{relative_path}: aws-actions/configure-aws-credentials requires id-token: write"
+                )
+            if not ROLE_TO_ASSUME.search(text):
+                errors.append(
+                    f"{relative_path}: aws-actions/configure-aws-credentials is missing role-to-assume"
+                )
+            if not AWS_REGION_INPUT.search(text):
+                errors.append(
+                    f"{relative_path}: aws-actions/configure-aws-credentials is missing aws-region"
+                )
 
         for marker in STATIC_CREDENTIAL_MARKERS:
             if marker in text:

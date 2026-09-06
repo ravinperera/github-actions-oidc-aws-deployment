@@ -186,7 +186,7 @@ terraform -chdir=aws/iam init -backend=false -input=false
 terraform -chdir=aws/iam validate
 ```
 
-The script validates JSON syntax, local Markdown links, workflow indentation, explicit workflow permissions, rejection of `permissions: write-all`, and checks workflow files for static AWS credential markers. GitHub Actions runs the same checks in [`.github/workflows/validate.yml`](.github/workflows/validate.yml) with read-only repository permission.
+The script validates JSON syntax, local Markdown links, workflow indentation, explicit workflow permissions, rejection of `permissions: write-all`, and checks workflow files for static AWS credential markers. When a workflow uses `aws-actions/configure-aws-credentials`, it also verifies that `id-token: write`, `role-to-assume`, and `aws-region` are present so an incomplete OIDC example cannot silently pass repository validation. GitHub Actions runs the same checks in [`.github/workflows/validate.yml`](.github/workflows/validate.yml) with read-only repository permission.
 
 The examples intentionally contain placeholder account IDs, resource names, roles, regions, and ARNs. Validation confirms structure and Terraform syntax; it does not prove that the examples are deployable in a particular AWS account, that IAM permissions are least privilege for a real workload, or that current provider guidance has been independently reviewed. The separate Terraform plan workflow requires an approved AWS role and environment configuration and is not part of the credential-free validation path.
 
