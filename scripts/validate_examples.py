@@ -22,7 +22,7 @@ TOP_LEVEL_PERMISSIONS = re.compile(r"(?m)^permissions\s*:")
 WRITE_ALL_PERMISSIONS = re.compile(r"(?mi)^\s*permissions\s*:\s*write-all\s*(?:#.*)?$")
 ID_TOKEN_WRITE = re.compile(r"(?mi)^\s*id-token\s*:\s*write\s*(?:#.*)?$")
 CONFIGURE_AWS_CREDENTIALS = re.compile(
-    r"(?mi)^\s*uses\s*:\s*aws-actions/configure-aws-credentials@"
+    r"(?mi)^\s*(?:-\s*)?uses\s*:\s*aws-actions/configure-aws-credentials@"
 )
 ROLE_TO_ASSUME = re.compile(r"(?mi)^\s*role-to-assume\s*:")
 AWS_REGION_INPUT = re.compile(r"(?mi)^\s*aws-region\s*:")
