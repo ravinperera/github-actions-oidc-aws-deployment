@@ -152,6 +152,55 @@ class ValidateExamplesTests(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("broad permissions: write-all", errors[0])
 
+    def test_workflow_validation_rejects_incomplete_oidc_credential_step(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workflow_dir = root / ".github" / "workflows"
+            workflow_dir.mkdir(parents=True)
+            (workflow_dir / "incomplete.yml").write_text(
+                "name: Incomplete OIDC\n"
+                "permissions:\n"
+                "  contents: read\n"
+                "jobs:\n"
+                "  deploy:\n"
+                "    steps:\n"
+                "      - uses: aws-actions/configure-aws-credentials@v4\n",
+                encoding="utf-8",
+            )
+
+            checked, errors = self.run_with_root(root, validator.validate_workflows)
+
+        self.assertEqual(checked, 1)
+        self.assertEqual(len(errors), 3)
+        self.assertTrue(any("requires id-token: write" in error for error in errors))
+        self.assertTrue(any("missing role-to-assume" in error for error in errors))
+        self.assertTrue(any("missing aws-region" in error for error in errors))
+
+    def test_workflow_validation_accepts_complete_oidc_credential_step(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workflow_dir = root / ".github" / "workflows"
+            workflow_dir.mkdir(parents=True)
+            (workflow_dir / "complete.yml").write_text(
+                "name: Complete OIDC\n"
+                "permissions:\n"
+                "  contents: read\n"
+                "  id-token: write\n"
+                "jobs:\n"
+                "  deploy:\n"
+                "    steps:\n"
+                "      - uses: aws-actions/configure-aws-credentials@v4\n"
+                "        with:\n"
+                "          role-to-assume: arn:aws:iam::111122223333:role/example-role\n"
+                "          aws-region: eu-west-2\n",
+                encoding="utf-8",
+            )
+
+            checked, errors = self.run_with_root(root, validator.validate_workflows)
+
+        self.assertEqual(checked, 1)
+        self.assertEqual(errors, [])
+
     def test_workflow_validation_accepts_oidc_only_workflow(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
