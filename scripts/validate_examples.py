@@ -24,6 +24,14 @@ ID_TOKEN_WRITE = re.compile(r"(?mi)^\s*id-token\s*:\s*write\s*(?:#.*)?$")
 CONFIGURE_AWS_CREDENTIALS = re.compile(
     r"(?mi)^\s*(?:-\s*)?uses\s*:\s*aws-actions/configure-aws-credentials@"
 )
+PULL_REQUEST_TARGET = re.compile(
+    r"(?mi)^(?!\s*#)(?:"
+    r"\s*pull_request_target\s*:|"
+    r"\s*-\s*pull_request_target\s*(?:#.*)?$|"
+    r"\s*on\s*:\s*pull_request_target\s*(?:#.*)?$|"
+    r"\s*on\s*:\s*\[[^\]]*\bpull_request_target\b[^\]]*\]"
+    r")"
+)
 ROLE_TO_ASSUME = re.compile(r"(?mi)^\s*role-to-assume\s*:")
 AWS_REGION_INPUT = re.compile(r"(?mi)^\s*aws-region\s*:")
 
@@ -133,6 +141,10 @@ def validate_workflows(errors: list[str]) -> int:
             )
 
         if CONFIGURE_AWS_CREDENTIALS.search(text):
+            if PULL_REQUEST_TARGET.search(text):
+                errors.append(
+                    f"{relative_path}: OIDC credential workflow must not use pull_request_target"
+                )
             if not ID_TOKEN_WRITE.search(text):
                 errors.append(
                     f"{relative_path}: aws-actions/configure-aws-credentials requires id-token: write"
