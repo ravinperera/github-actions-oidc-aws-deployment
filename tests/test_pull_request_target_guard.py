@@ -46,6 +46,7 @@ class PullRequestTargetGuardTests(unittest.TestCase):
             "        with:\n"
             "          role-to-assume: arn:aws:iam::111122223333:role/example-role\n"
             "          aws-region: eu-west-2\n"
+            "          role-session-name: gha-${{ github.run_id }}-${{ github.run_attempt }}\n"
         )
 
         self.assertEqual(len(errors), 1)
@@ -66,6 +67,7 @@ class PullRequestTargetGuardTests(unittest.TestCase):
             "        with:\n"
             "          role-to-assume: arn:aws:iam::111122223333:role/example-role\n"
             "          aws-region: eu-west-2\n"
+            "          role-session-name: gha-${{ github.run_id }}-${{ github.run_attempt }}\n"
         )
 
         self.assertEqual(errors, [])
