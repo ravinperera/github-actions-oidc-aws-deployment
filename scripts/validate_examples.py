@@ -34,6 +34,7 @@ PULL_REQUEST_TARGET = re.compile(
 )
 ROLE_TO_ASSUME = re.compile(r"(?mi)^\s*role-to-assume\s*:")
 AWS_REGION_INPUT = re.compile(r"(?mi)^\s*aws-region\s*:")
+ROLE_SESSION_NAME = re.compile(r"(?mi)^\s*role-session-name\s*:")
 
 
 def reject_duplicate_json_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -156,6 +157,10 @@ def validate_workflows(errors: list[str]) -> int:
             if not AWS_REGION_INPUT.search(text):
                 errors.append(
                     f"{relative_path}: aws-actions/configure-aws-credentials is missing aws-region"
+                )
+            if not ROLE_SESSION_NAME.search(text):
+                errors.append(
+                    f"{relative_path}: aws-actions/configure-aws-credentials is missing role-session-name"
                 )
 
         for marker in STATIC_CREDENTIAL_MARKERS:

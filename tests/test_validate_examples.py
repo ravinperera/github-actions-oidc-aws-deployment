@@ -171,10 +171,11 @@ class ValidateExamplesTests(unittest.TestCase):
             checked, errors = self.run_with_root(root, validator.validate_workflows)
 
         self.assertEqual(checked, 1)
-        self.assertEqual(len(errors), 3)
+        self.assertEqual(len(errors), 4)
         self.assertTrue(any("requires id-token: write" in error for error in errors))
         self.assertTrue(any("missing role-to-assume" in error for error in errors))
         self.assertTrue(any("missing aws-region" in error for error in errors))
+        self.assertTrue(any("missing role-session-name" in error for error in errors))
 
     def test_workflow_validation_accepts_complete_oidc_credential_step(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -192,7 +193,8 @@ class ValidateExamplesTests(unittest.TestCase):
                 "      - uses: aws-actions/configure-aws-credentials@v4\n"
                 "        with:\n"
                 "          role-to-assume: arn:aws:iam::111122223333:role/example-role\n"
-                "          aws-region: eu-west-2\n",
+                "          aws-region: eu-west-2\n"
+                "          role-session-name: gha-${{ github.run_id }}-${{ github.run_attempt }}\n",
                 encoding="utf-8",
             )
 
