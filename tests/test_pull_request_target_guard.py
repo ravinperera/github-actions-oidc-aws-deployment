@@ -52,6 +52,43 @@ class PullRequestTargetGuardTests(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("must not use pull_request_target", errors[0])
 
+    def test_quoted_pull_request_target_triggers_are_rejected(self) -> None:
+        oidc_step = (
+            "permissions:\n"
+            "  contents: read\n"
+            "  id-token: write\n"
+            "jobs:\n"
+            "  deploy:\n"
+            "    steps:\n"
+            "      - uses: aws-actions/configure-aws-credentials@v4\n"
+            "        with:\n"
+            "          role-to-assume: arn:aws:iam::111122223333:role/example-role\n"
+            "          aws-region: eu-west-2\n"
+            "          role-session-name: gha-example\n"
+        )
+        trigger_cases = (
+            ("on:\n  'pull_request_target':\n", True),
+            ('on:\n  "pull_request_target":\n', True),
+            ("on:\n  - 'pull_request_target'\n", True),
+            ('on:\n  - "pull_request_target"\n', True),
+            ("on: 'pull_request_target'\n", True),
+            ('on: "pull_request_target"\n', True),
+            ('on: [push, "pull_request_target"]\n', True),
+            ("on:\n  'pull_request':\n", False),
+            ('on: "pull_request"\n', False),
+            ("on:\n  # 'pull_request_target':\n  pull_request:\n", False),
+        )
+
+        for trigger, unsafe in trigger_cases:
+            with self.subTest(trigger=trigger):
+                errors = self.validate_workflow(trigger + oidc_step)
+                if unsafe:
+                    self.assertEqual(len(errors), 1)
+                    self.assertIn("must not use pull_request_target", errors[0])
+                else:
+                    self.assertEqual(errors, [])
+
+
     def test_accepts_pull_request_for_oidc_credentials(self) -> None:
         errors = self.validate_workflow(
             "name: Reviewed OIDC trigger\n"

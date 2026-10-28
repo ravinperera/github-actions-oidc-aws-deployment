@@ -24,11 +24,12 @@ ID_TOKEN_WRITE = re.compile(r"(?mi)^\s*id-token\s*:\s*write\s*(?:#.*)?$")
 CONFIGURE_AWS_CREDENTIALS = re.compile(
     r"(?mi)^\s*(?:-\s*)?uses\s*:\s*aws-actions/configure-aws-credentials@"
 )
+PULL_REQUEST_TARGET_EVENT = r"""(?:pull_request_target|'pull_request_target'|"pull_request_target")"""
 PULL_REQUEST_TARGET = re.compile(
-    r"(?mi)^(?!\s*#)(?:"
-    r"\s*pull_request_target\s*:|"
-    r"\s*-\s*pull_request_target\s*(?:#.*)?$|"
-    r"\s*on\s*:\s*pull_request_target\s*(?:#.*)?$|"
+    rf"(?mi)^(?!\s*#)(?:"
+    rf"\s*{PULL_REQUEST_TARGET_EVENT}\s*:|"
+    rf"\s*-\s*{PULL_REQUEST_TARGET_EVENT}\s*(?:#.*)?$|"
+    rf"\s*on\s*:\s*{PULL_REQUEST_TARGET_EVENT}\s*(?:#.*)?$|"
     r"\s*on\s*:\s*\[[^\]]*\bpull_request_target\b[^\]]*\]"
     r")"
 )
