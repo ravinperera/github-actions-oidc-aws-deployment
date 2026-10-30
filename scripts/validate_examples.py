@@ -19,7 +19,9 @@ STATIC_CREDENTIAL_MARKERS = (
     "AWS_SECRET_ACCESS_KEY",
 )
 TOP_LEVEL_PERMISSIONS = re.compile(r"(?m)^permissions\s*:")
-WRITE_ALL_PERMISSIONS = re.compile(r"(?mi)^\s*permissions\s*:\s*write-all\s*(?:#.*)?$")
+WRITE_ALL_PERMISSIONS = re.compile(
+    r"""(?mi)^\s*permissions\s*:\s*(?:write-all|'write-all'|"write-all")\s*(?:#.*)?$"""
+)
 ID_TOKEN_WRITE = re.compile(r"(?mi)^\s*id-token\s*:\s*write\s*(?:#.*)?$")
 CONFIGURE_AWS_CREDENTIALS = re.compile(
     r"(?mi)^\s*(?:-\s*)?uses\s*:\s*aws-actions/configure-aws-credentials@"

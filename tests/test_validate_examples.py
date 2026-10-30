@@ -152,6 +152,41 @@ class ValidateExamplesTests(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("broad permissions: write-all", errors[0])
 
+    def test_workflow_validation_handles_quoted_permissions(self) -> None:
+        cases = (
+            ("single-quoted workflow", "permissions: 'write-all'\n", True),
+            ("double-quoted workflow", 'permissions: "write-all" # broad\n', True),
+            (
+                "single-quoted job",
+                "permissions:\n"
+                "  contents: read\n"
+                "jobs:\n"
+                "  test:\n"
+                "    permissions: 'write-all'\n",
+                True,
+            ),
+            ("quoted read-all", 'permissions: "read-all"\n', False),
+            ("scoped permission", "permissions:\n  contents: read\n", False),
+        )
+        for label, content, unsafe in cases:
+            with self.subTest(label=label):
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    workflow_dir = root / ".github" / "workflows"
+                    workflow_dir.mkdir(parents=True)
+                    (workflow_dir / "example.yml").write_text(
+                        content, encoding="utf-8"
+                    )
+                    checked, errors = self.run_with_root(
+                        root, validator.validate_workflows
+                    )
+                self.assertEqual(checked, 1)
+                if unsafe:
+                    self.assertEqual(len(errors), 1)
+                    self.assertIn("broad permissions: write-all", errors[0])
+                else:
+                    self.assertEqual(errors, [])
+
     def test_workflow_validation_rejects_incomplete_oidc_credential_step(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
