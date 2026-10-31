@@ -32,7 +32,8 @@ PULL_REQUEST_TARGET = re.compile(
     rf"\s*{PULL_REQUEST_TARGET_EVENT}\s*:|"
     rf"\s*-\s*{PULL_REQUEST_TARGET_EVENT}\s*(?:#.*)?$|"
     rf"\s*on\s*:\s*{PULL_REQUEST_TARGET_EVENT}\s*(?:#.*)?$|"
-    r"\s*on\s*:\s*\[[^\]]*\bpull_request_target\b[^\]]*\]"
+    r"\s*on\s*:\s*\[[^\]]*\bpull_request_target\b[^\]]*\]|"
+    rf"\s*on\s*:\s*\{{\s*{PULL_REQUEST_TARGET_EVENT}\s*:"
     r")"
 )
 ROLE_TO_ASSUME = re.compile(r"(?mi)^\s*role-to-assume\s*:")
