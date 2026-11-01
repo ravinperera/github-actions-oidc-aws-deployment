@@ -42,7 +42,7 @@ ROLE_SESSION_NAME = re.compile(r"(?mi)^\s*role-session-name\s*:")
 
 
 def flow_style_has_pull_request_target(text: str) -> bool:
-    """Check top-level event keys of single-line flow-style \`on: {...}\` mappings."""
+    """Check top-level event keys of single-line flow-style 'on: {...}' mappings."""
     for line in text.splitlines():
         match = FLOW_STYLE_ON.match(line)
         if match is None:
