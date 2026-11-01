@@ -32,13 +32,47 @@ PULL_REQUEST_TARGET = re.compile(
     rf"\s*{PULL_REQUEST_TARGET_EVENT}\s*:|"
     rf"\s*-\s*{PULL_REQUEST_TARGET_EVENT}\s*(?:#.*)?$|"
     rf"\s*on\s*:\s*{PULL_REQUEST_TARGET_EVENT}\s*(?:#.*)?$|"
-    r"\s*on\s*:\s*\[[^\]]*\bpull_request_target\b[^\]]*\]|"
-    rf"\s*on\s*:\s*\{{\s*{PULL_REQUEST_TARGET_EVENT}\s*:"
+    r"\s*on\s*:\s*\[[^\]]*\bpull_request_target\b[^\]]*\]"
     r")"
 )
+FLOW_STYLE_ON = re.compile(r"(?m)^\s*on\s*:\s*\{")
 ROLE_TO_ASSUME = re.compile(r"(?mi)^\s*role-to-assume\s*:")
 AWS_REGION_INPUT = re.compile(r"(?mi)^\s*aws-region\s*:")
 ROLE_SESSION_NAME = re.compile(r"(?mi)^\s*role-session-name\s*:")
+
+
+def flow_style_has_pull_request_target(text: str) -> bool:
+    """Check top-level event keys of single-line flow-style \`on: {...}\` mappings."""
+    for line in text.splitlines():
+        match = FLOW_STYLE_ON.match(line)
+        if match is None:
+            continue
+        depth, key_start = 1, match.end()
+        quote: str | None = None
+        escaped = False
+        for index in range(key_start, len(line)):
+            char = line[index]
+            if quote is not None:
+                if escaped:
+                    escaped = False
+                elif char == "\\" and quote == '"':
+                    escaped = True
+                elif char == quote:
+                    quote = None
+            elif char in ("'", '"'):
+                quote = char
+            elif char in "{[":
+                depth += 1
+            elif char in "}]":
+                depth -= 1
+                if depth == 0:
+                    break
+            elif depth == 1 and char == ",":
+                key_start = index + 1
+            elif depth == 1 and char == ":":
+                if re.fullmatch(PULL_REQUEST_TARGET_EVENT, line[key_start:index].strip()):
+                    return True
+    return False
 
 
 def reject_duplicate_json_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -146,7 +180,7 @@ def validate_workflows(errors: list[str]) -> int:
             )
 
         if CONFIGURE_AWS_CREDENTIALS.search(text):
-            if PULL_REQUEST_TARGET.search(text):
+            if PULL_REQUEST_TARGET.search(text) or flow_style_has_pull_request_target(text):
                 errors.append(
                     f"{relative_path}: OIDC credential workflow must not use pull_request_target"
                 )
