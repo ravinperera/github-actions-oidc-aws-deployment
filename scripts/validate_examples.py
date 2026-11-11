@@ -27,22 +27,23 @@ CONFIGURE_AWS_CREDENTIALS = re.compile(
     r"(?mi)^\s*(?:-\s*)?uses\s*:\s*aws-actions/configure-aws-credentials@"
 )
 PULL_REQUEST_TARGET_EVENT = r"""(?:pull_request_target|'pull_request_target'|"pull_request_target")"""
+ON_EVENT_KEY = r"""(?:on|'on'|"on")"""
 PULL_REQUEST_TARGET = re.compile(
     rf"(?mi)^(?!\s*#)(?:"
     rf"\s*{PULL_REQUEST_TARGET_EVENT}\s*:|"
     rf"\s*-\s*{PULL_REQUEST_TARGET_EVENT}\s*(?:#.*)?$|"
-    rf"\s*on\s*:\s*{PULL_REQUEST_TARGET_EVENT}\s*(?:#.*)?$|"
-    r"\s*on\s*:\s*\[[^\]]*\bpull_request_target\b[^\]]*\]"
+    rf"\s*{ON_EVENT_KEY}\s*:\s*{PULL_REQUEST_TARGET_EVENT}\s*(?:#.*)?$|"
+    rf"\s*{ON_EVENT_KEY}\s*:\s*\[[^\]]*\bpull_request_target\b[^\]]*\]"
     r")"
 )
-FLOW_STYLE_ON = re.compile(r"(?m)^\s*on\s*:\s*\{")
+FLOW_STYLE_ON = re.compile(rf"(?m)^\s*{ON_EVENT_KEY}\s*:\s*\{{")
 ROLE_TO_ASSUME = re.compile(r"(?mi)^\s*role-to-assume\s*:")
 AWS_REGION_INPUT = re.compile(r"(?mi)^\s*aws-region\s*:")
 ROLE_SESSION_NAME = re.compile(r"(?mi)^\s*role-session-name\s*:")
 
 
 def flow_style_has_pull_request_target(text: str) -> bool:
-    """Check top-level event keys of single-line flow-style 'on: {...}' mappings."""
+    """Check top-level event keys of single-line flow-style on mappings."""
     for line in text.splitlines():
         match = FLOW_STYLE_ON.match(line)
         if match is None:
