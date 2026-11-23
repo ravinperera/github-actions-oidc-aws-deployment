@@ -92,6 +92,50 @@ class ValidateExamplesTests(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("missing-real.md", errors[0])
 
+    def test_markdown_links_respect_fence_lengths_and_indentation(self) -> None:
+        cases = (
+            (
+                "four-space pseudo-fence",
+                "    ```\n[broken](missing.md)\n    ```\n",
+            ),
+            (
+                "short closing fence",
+                "````markdown\n[example](ignored.md)\n```\n"
+                "[example](also-ignored.md)\n````\n[real](missing.md)\n",
+            ),
+            (
+                "long closing fence",
+                "```markdown\n[example](ignored.md)\n````\n"
+                "[real](missing.md)\n",
+            ),
+            (
+                "invalid closing suffix",
+                "```markdown\n[example](ignored.md)\n``` extra\n"
+                "[example](also-ignored.md)\n```\n[real](missing.md)\n",
+            ),
+            (
+                "mixed delimiters",
+                "~~~markdown\n[example](ignored.md)\n```\n"
+                "[example](also-ignored.md)\n~~~\n[real](missing.md)\n",
+            ),
+            (
+                "three-space indented fence",
+                "   ```markdown\n[example](ignored.md)\n   ```\n"
+                "[real](missing.md)\n",
+            ),
+        )
+        for label, markdown in cases:
+            with self.subTest(label=label):
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    (root / "guide.md").write_text(markdown, encoding="utf-8")
+                    checked, errors = self.run_with_root(
+                        root, validator.validate_markdown_links
+                    )
+                self.assertEqual(checked, 1)
+                self.assertEqual(len(errors), 1)
+                self.assertIn("missing.md", errors[0])
+
     def test_workflow_validation_rejects_static_credential_markers(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
