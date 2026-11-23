@@ -11,6 +11,7 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+MARKDOWN_FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 REMOTE_PREFIXES = ("http://", "https://", "mailto:", "tel:")
 STATIC_CREDENTIAL_MARKERS = (
     "aws-access-key-id:",
@@ -109,25 +110,27 @@ def validate_markdown_links(errors: list[str]) -> int:
             continue
         checked += 1
         text = path.read_text(encoding="utf-8")
-        active_fence: str | None = None
+        active_fence: tuple[str, int] | None = None
 
         for line in text.splitlines():
-            stripped = line.lstrip()
-            marker = None
-            if stripped.startswith("```"):
-                marker = "```"
-            elif stripped.startswith("~~~"):
-                marker = "~~~"
-
-            if marker is not None:
-                if active_fence is None:
-                    active_fence = marker
-                elif active_fence == marker:
-                    active_fence = None
-                continue
-
+            fence = MARKDOWN_FENCE.match(line)
             if active_fence is not None:
+                if fence is not None:
+                    marker, trailing = fence.groups()
+                    if (
+                        marker[0] == active_fence[0]
+                        and len(marker) >= active_fence[1]
+                        and not trailing.strip()
+                    ):
+                        active_fence = None
                 continue
+
+            if fence is not None:
+                marker, info = fence.groups()
+                # Backtick code-fence info strings cannot contain backticks.
+                if marker[0] != "`" or "`" not in info:
+                    active_fence = (marker[0], len(marker))
+                    continue
 
             for raw_target in MARKDOWN_LINK.findall(line):
                 target = raw_target.strip().split(maxsplit=1)[0].strip("<>")
